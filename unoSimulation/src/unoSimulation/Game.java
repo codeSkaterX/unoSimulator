@@ -5,39 +5,47 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import unoSimulation.Card.Color;
 
-//To do: Fix empty deck and discard pile error
 
 public class Game {
-	Deck myDeck;
+	private Deck myDeck;  // Deck variable
 
-	ArrayList<Player> playerList;
+	private ArrayList<Player> playerList; // Player list
 
-	ArrayList<Player> playerOrder;
+	private ArrayList<Player> playerOrder; // Player order
 
-	int direction = 1;
-	int currentTurn;
+	private int direction = 1; // Direction game is going
+	private int currentTurn; // Current turn
 
-	final double gameCount = 10000;
+	private final int gameCount; // Number of games to be played
 
-	int victoryCounter = 0;
-	int turnCounter = 0;
+	private int victoryCounter = 0; // Keeps track of wins
+	private int turnCounter = 0; // Keeps track of turns
+	private int turnTotal = 0; // Keeps track of turn total
 
-	int turnTotal = 0;
+	private int[] winTracker; // Keeps track of wins for each position
 
-	int firstWins = 0;
-	int secondWins = 0;
-	int thirdWins = 0;
+	private Player currentPlayer; // Keeps track of player taking current turn
 
-	int startingTurn = 0;
-
-	Player currentPlayer;
-
-	boolean victory = false;
+	private boolean victory; // Used for deciding if game is over or not
 
 	public Game() {
+		gameCount = 1000;
+		
 		myDeck = new Deck();
 		playerList = new ArrayList<Player>();
 		playerOrder = new ArrayList<Player>();
+	
+		victory = false;
+	}
+	
+	public Game(int gamesToBePlayed){
+		gameCount = gamesToBePlayed;
+		
+		myDeck = new Deck();
+		playerList = new ArrayList<Player>();
+		playerOrder = new ArrayList<Player>();
+	
+		victory = false;
 	}
 
 	public void addPlayer(Player newPlayer) {
@@ -45,6 +53,8 @@ public class Game {
 	}
 
 	public void startGame() {
+		winTracker = new int[playerList.size()];
+		
 		while (victoryCounter < gameCount) {
 			
 			
@@ -52,14 +62,16 @@ public class Game {
 					playerList.size() - 1 + 1);
 			// Randomly decides who goes first
 
-			for (int i = currentTurn; i < playerList.size(); i++) {
-				playerOrder.add(playerList.get(i));
+			for (int i = currentTurn; i < playerList.size(); i++) { // Adds players
+				playerOrder.add(playerList.get(i)); // in order of which they play
 			}
+			
+			// Has two loops so it can loop around whole player list
 			for (int i = 0; i < currentTurn; i++) {
 				playerOrder.add(playerList.get(i));
 			}
-
-			myDeck.startingDeal(playerList);
+			
+			myDeck.startingDeal(playerList); // Deals out the cards
 
 			System.out.println("Hand sizes: ");
 			for(Player myPlayer : playerList){
@@ -74,13 +86,8 @@ public class Game {
 			currentPlayer = playerList.get(currentTurn);
 			playerTurn();
 
-			turnCounter++;
-	//		System.out.println("Turn finished: " + turnCounter);
-
-	//		System.out.println(playerList.get(0).handSize() + " "
-	//				+ playerList.get(1).handSize() + " "
-	//				+ playerList.get(2).handSize());
-
+			turnCounter++; 
+			
 			while (victory == false) {
 				currentTurn = currentTurn + direction;
 				if (currentTurn < 0) {
@@ -92,34 +99,29 @@ public class Game {
 				victory = playerTurn();
 
 				turnCounter++;
-	//			System.out.println("Turn finished: " + turnCounter);
-
-	//			System.out.println(playerList.get(0).handSize() + " "
-	//					+ playerList.get(1).handSize() + " "
-	//					+ playerList.get(2).handSize());
 			}
 
-			victoryCounter++;
+			victoryCounter++; // Adds to victory count
 			
 			System.out.println("Turn finished: " + turnCounter);
 			System.out.println(currentPlayer.getName() + " has won game #" + victoryCounter + "!!");
-			victory = false;
 
-			turnTotal += turnCounter;
-			turnCounter = 0;
+			turnTotal += turnCounter; // Adds to total turn count
+			turnCounter = 0;  // Resets turn counter
 
-			currentPlayer.addWin();
-			if (currentPlayer.getName().equals(playerOrder.get(0).getName())) {
-				firstWins++;
-			} else if (currentPlayer.getName()
-					.equals(playerOrder.get(1).getName())) {
-				secondWins++;
-			} else {
-				thirdWins++;
+			currentPlayer.addWin(); // Adds win to the player
+			
+			int i = 0;
+			while(victory == true){
+				if (currentPlayer.getName().equals(playerOrder.get(i).getName())) {
+					winTracker[i]++;
+					victory = false;
+				}
+				i++;
 			}
 
-			playerOrder.clear();
-			myDeck.resetDeck(playerList);
+			playerOrder.clear(); // Resets player order
+			myDeck.resetDeck(playerList); // Resets deck to restart game
 		}
 		System.out.println("Victory!!!");
 		System.out.println("Total turns: " + turnTotal);
@@ -130,9 +132,12 @@ public class Game {
 
 		System.out.println("Average game length: " + turnTotal / gameCount);
 
-		System.out.println("1st wins: " + firstWins);
-		System.out.println("Second wins: " + secondWins);
-		System.out.println("Third wins: " + thirdWins);
+		System.out.println("Wins per player:\n");
+		
+		for(int playerWins : winTracker){
+			System.out.println(playerWins);
+		}
+		
 	}
 
 	private boolean playerTurn() {
@@ -220,16 +225,5 @@ public class Game {
 
 		return false;
 	}
-
-	/*
-	 * private boolean playableCard(Card currentCard, Card givenCard){
-	 * 
-	 * if (card.getColor() == Card.Color.Wild) { return true; } if
-	 * (card.getColor() == currentCard.getColor()) { // Do colors // matchup
-	 * return true; } if (currentCard.cardColor == Card.Color.Wild &&
-	 * card.getColor() == wildColor) { // If currentCard is wild, does card
-	 * match picked color? return true; } if (card.getValue() ==
-	 * currentCard.getValue()) { // Do values // matchup return true; } }return
-	 * false; // No playable cards
-	 */
+	
 }
